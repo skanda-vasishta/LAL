@@ -1,12 +1,12 @@
 'use server';
 
-import { signIn } from '@/auth';
+import { signIn, signOut } from '@/auth';
 import { AuthError } from 'next-auth';
-import bcryptjs from 'bcryptjs';
-import postgres from 'postgres';
+import bcrypt from 'bcrypt';
 import { z } from 'zod';
+import { prisma } from './prisma';
 
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
+console.log('Actions file loaded, prisma client:', !!prisma);
 
 export async function authenticate(
   email: string,
@@ -27,12 +27,22 @@ export async function authenticate(
   }
 }
 
+export async function signOutAction() {
+  'use server';
+  await signOut();
+}
+
 export async function register(
   name: string,
   email: string,
   password: string,
 ) {
   try {
+    console.log('Starting registration process...');
+    console.log('Prisma client in register function:', !!prisma);
+    console.log('Prisma client keys:', Object.keys(prisma));
+    console.log('Prisma user model:', !!prisma.user);
+    
     // Validate input
     const validatedFields = z
       .object({
@@ -43,27 +53,47 @@ export async function register(
       .safeParse({ name, email, password });
 
     if (!validatedFields.success) {
+      console.log('Validation failed:', validatedFields.error);
       return { error: 'Invalid input data' };
     }
 
+    console.log('Checking for existing user...');
     // Check if user already exists
-    const existingUser = await sql`SELECT * FROM users WHERE email = ${email}`;
-    if (existingUser.length > 0) {
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
+    
+    if (existingUser) {
+      console.log('User already exists');
       return { error: 'User with this email already exists' };
     }
 
+    console.log('Hashing password...');
     // Hash password
-    const hashedPassword = await bcryptjs.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
+    console.log('Creating user...');
     // Create user
-    await sql`
-      INSERT INTO users (name, email, password)
-      VALUES (${name}, ${email}, ${hashedPassword})
-    `;
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+    });
 
-    return { success: true };
+    console.log('User created successfully:', user);
+    return { success: true, user };
   } catch (error) {
     console.error('Registration error:', error);
+    if (error instanceof Error) {
+      return { error: `Failed to create user: ${error.message}` };
+    }
     return { error: 'Failed to create user' };
   }
 } 

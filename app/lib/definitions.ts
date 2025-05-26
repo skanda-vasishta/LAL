@@ -2,6 +2,7 @@
 // It describes the shape of the data, and what data type each property should accept.
 // For simplicity of teaching, we're manually defining these types.
 // However, these types are generated automatically if you're using an ORM such as Prisma.
+
 export type User = {
   id: string;
   name: string;
@@ -9,80 +10,48 @@ export type User = {
   password: string;
 };
 
-export type Customer = {
+export type Team = {
   id: string;
   name: string;
-  email: string;
-  image_url: string;
+  win_percentage: number; // Last season's win percentage
 };
 
-export type Invoice = {
+export type DraftPick = {
   id: string;
-  customer_id: string;
-  amount: number;
-  date: string;
-  // In TypeScript, this is called a string union type.
-  // It means that the "status" property can only be one of the two strings: 'pending' or 'paid'.
-  status: 'pending' | 'paid';
+  year: number;
+  round: 1 | 2; // Only first or second round picks
+  team_id: string; // Current owner of the pick
 };
 
-export type Revenue = {
-  month: string;
-  revenue: number;
-};
-
-export type LatestInvoice = {
+export type Trade = {
   id: string;
-  name: string;
-  image_url: string;
-  email: string;
-  amount: string;
+  user_id: string;
+  description: string;
+  created_at: Date;
 };
 
-// The database returns a number for amount, but we later format it to a string with the formatCurrency function
-export type LatestInvoiceRaw = Omit<LatestInvoice, 'amount'> & {
-  amount: number;
-};
-
-export type InvoicesTable = {
+export type TradeTeam = {
   id: string;
-  customer_id: string;
-  name: string;
-  email: string;
-  image_url: string;
-  date: string;
-  amount: number;
-  status: 'pending' | 'paid';
+  trade_id: string;
+  team_id: string;
+  is_giving: boolean; // true if team is giving assets, false if receiving
 };
 
-export type CustomersTableType = {
+export type TradeDraftPick = {
   id: string;
-  name: string;
-  email: string;
-  image_url: string;
-  total_invoices: number;
-  total_pending: number;
-  total_paid: number;
+  trade_id: string;
+  year: number;
+  round: 1 | 2;
+  giving_team_id: string;
+  receiving_team_id: string;
 };
 
-export type FormattedCustomersTable = {
-  id: string;
-  name: string;
-  email: string;
-  image_url: string;
-  total_invoices: number;
-  total_pending: string;
-  total_paid: string;
+// Combined types for API responses
+export type TradeWithDetails = Trade & {
+  teams: (TradeTeam & { team: Team })[];
+  draft_picks: TradeDraftPick[];
 };
 
-export type CustomerField = {
-  id: string;
-  name: string;
-};
-
-export type InvoiceForm = {
-  id: string;
-  customer_id: string;
-  amount: number;
-  status: 'pending' | 'paid';
+export type TeamWithAssets = Team & {
+  draft_picks: DraftPick[];
 };

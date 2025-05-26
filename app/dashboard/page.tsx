@@ -1,31 +1,41 @@
-import { Card } from '@/app/ui/dashboard/cards';
-import RevenueChart from '@/app/ui/dashboard/revenue-chart';
-import LatestInvoices from '@/app/ui/dashboard/latest-invoices';
-import { lusitana } from '@/app/ui/fonts';
-import { fetchRevenue } from '@/app/lib/data';
- 
-export default async function Page() {
-  const revenue = await fetchRevenue();
+import { getTeams, getDraftPicksByTeam } from '@/app/lib/db';
 
+export default async function DashboardPage() {
+  const teams = await getTeams();
+  
   return (
-    <main>
-      <h1 className={`${lusitana.className} mb-4 text-xl md:text-2xl`}>
-        Dashboard
-      </h1>
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {/* <Card title="Collected" value={totalPaidInvoices} type="collected" /> */}
-        {/* <Card title="Pending" value={totalPendingInvoices} type="pending" /> */}
-        {/* <Card title="Total Invoices" value={numberOfInvoices} type="invoices" /> */}
-        {/* <Card
-          title="Total Customers"
-          value={numberOfCustomers}
-          type="customers"
-        /> */}
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-6">NBA Teams and Draft Picks</h1>
+      
+      <div className="grid gap-6">
+        {teams.map(async (team) => {
+          const picks = await getDraftPicksByTeam(team.id);
+          
+          return (
+            <div key={team.id} className="bg-white p-6 rounded-lg shadow">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">{team.name}</h2>
+                <span className="text-gray-600">
+                  Win %: {(team.win_percentage * 100).toFixed(1)}%
+                </span>
+              </div>
+              
+              <div className="mt-4">
+                <h3 className="text-lg font-medium mb-2">Draft Picks</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  {picks.map((pick) => (
+                    <div key={pick.id} className="bg-gray-50 p-3 rounded">
+                      <div className="font-medium">
+                        {pick.year} Round {pick.round}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
-      <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-4 lg:grid-cols-8">
-        <RevenueChart revenue={revenue}  />
-        {/* <LatestInvoices latestInvoices={latestInvoices} /> */}
-      </div>
-    </main>
+    </div>
   );
 }
