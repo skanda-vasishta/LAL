@@ -1,8 +1,6 @@
 import { unstable_noStore as noStore } from 'next/cache';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from './prisma';
 import { Trade, Team, DraftPick, TradeTeam, TradeDraftPick, TradeWithDetails } from './definitions';
-
-export const prisma = new PrismaClient();
 
 // Team operations
 export async function getTeams() {
