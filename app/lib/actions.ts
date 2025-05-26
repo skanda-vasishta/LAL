@@ -38,11 +38,6 @@ export async function register(
   password: string,
 ) {
   try {
-    console.log('Starting registration process...');
-    console.log('Prisma client in register function:', !!prisma);
-    console.log('Prisma client keys:', Object.keys(prisma));
-    console.log('Prisma user model:', !!prisma.user);
-    
     // Validate input
     const validatedFields = z
       .object({
@@ -53,26 +48,21 @@ export async function register(
       .safeParse({ name, email, password });
 
     if (!validatedFields.success) {
-      console.log('Validation failed:', validatedFields.error);
       return { error: 'Invalid input data' };
     }
 
-    console.log('Checking for existing user...');
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email }
     });
     
     if (existingUser) {
-      console.log('User already exists');
       return { error: 'User with this email already exists' };
     }
 
-    console.log('Hashing password...');
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    console.log('Creating user...');
     // Create user
     const user = await prisma.user.create({
       data: {
@@ -87,7 +77,6 @@ export async function register(
       },
     });
 
-    console.log('User created successfully:', user);
     return { success: true, user };
   } catch (error) {
     console.error('Registration error:', error);
