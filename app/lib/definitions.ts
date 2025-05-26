@@ -29,6 +29,7 @@ export type Trade = {
   userId: string;
   description: string;
   createdAt: Date;
+  teams: string[]; // Array of team names
 };
 
 export type TradeTeam = {
@@ -42,9 +43,9 @@ export type TradeDraftPick = {
   id: string;
   tradeId: string;
   year: number;
-  round: number; // Round number (typically 1 or 2)
-  givingTeamId: string;
-  receivingTeamId: string;
+  round: number;
+  givingTeam: string; // Team name as string
+  receivingTeam: string; // Team name as string
 };
 
 // Combined types for API responses

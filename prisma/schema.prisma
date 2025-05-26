@@ -24,50 +24,16 @@ model User {
   @@map("users")
 }
 
-model Team {
-  id             String         @id @default(uuid())
-  name           String
-  winPercentage  Float          @map("win_percentage")
-  draftPicks     DraftPick[]
-  tradeTeams     TradeTeam[]
-  givingPicks    TradeDraftPick[] @relation("GivingTeam")
-  receivingPicks TradeDraftPick[] @relation("ReceivingTeam")
-
-  @@map("teams")
-}
-
-model DraftPick {
-  id        String   @id @default(uuid())
-  year      Int
-  round     Int
-  team      Team     @relation(fields: [teamId], references: [id])
-  teamId    String   @map("team_id")
-
-  @@unique([year, round, teamId])
-  @@map("draft_picks")
-}
-
 model Trade {
   id          String           @id @default(uuid())
   userId      String          @map("user_id")
   user        User            @relation(fields: [userId], references: [id])
   description String?
   createdAt   DateTime        @default(now()) @map("created_at")
-  teams       TradeTeam[]
+  teams       String[]        
   draftPicks  TradeDraftPick[]
 
   @@map("trades")
-}
-
-model TradeTeam {
-  id        String   @id @default(uuid())
-  trade     Trade    @relation(fields: [tradeId], references: [id], onDelete: Cascade)
-  tradeId   String   @map("trade_id")
-  team      Team     @relation(fields: [teamId], references: [id])
-  teamId    String   @map("team_id")
-  isGiving  Boolean  @map("is_giving")
-
-  @@map("trade_teams")
 }
 
 model TradeDraftPick {
@@ -76,10 +42,8 @@ model TradeDraftPick {
   tradeId         String   @map("trade_id")
   year            Int
   round           Int
-  givingTeam      Team     @relation("GivingTeam", fields: [givingTeamId], references: [id])
-  givingTeamId    String   @map("giving_team_id")
-  receivingTeam   Team     @relation("ReceivingTeam", fields: [receivingTeamId], references: [id])
-  receivingTeamId String   @map("receiving_team_id")
+  givingTeam      String   
+  receivingTeam   String   
 
   @@map("trade_draft_picks")
 }

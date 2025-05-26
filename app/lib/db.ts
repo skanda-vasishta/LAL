@@ -1,51 +1,6 @@
 import { unstable_noStore as noStore } from 'next/cache';
 import { prisma } from './prisma';
-import { Trade, Team, DraftPick, TradeTeam, TradeDraftPick, TradeWithDetails } from './definitions';
-
-// Team operations
-export async function getTeams() {
-  noStore();
-  try {
-    const teams = await prisma.team.findMany({
-      orderBy: { name: 'asc' }
-    });
-    return teams;
-  } catch (error) {
-    console.error('Database Error:', error);
-    throw new Error('Failed to fetch teams.');
-  }
-}
-
-export async function getTeamById(id: string) {
-  noStore();
-  try {
-    const team = await prisma.team.findUnique({
-      where: { id }
-    });
-    return team;
-  } catch (error) {
-    console.error('Database Error:', error);
-    throw new Error('Failed to fetch team.');
-  }
-}
-
-// Draft pick operations
-export async function getDraftPicksByTeam(teamId: string) {
-  noStore();
-  try {
-    const picks = await prisma.draftPick.findMany({
-      where: { teamId },
-      orderBy: [
-        { year: 'desc' },
-        { round: 'asc' }
-      ]
-    });
-    return picks;
-  } catch (error) {
-    console.error('Database Error:', error);
-    throw new Error('Failed to fetch draft picks.');
-  }
-}
+import { Trade, TradeDraftPick, TradeWithDetails } from './definitions';
 
 // Trade operations
 export async function getTradesByUser(userId: string) {
@@ -62,41 +17,19 @@ export async function getTradesByUser(userId: string) {
   }
 }
 
-export async function getTradeById(id: string) {
-  noStore();
-  try {
-    const trade = await prisma.trade.findUnique({
-      where: { id }
-    });
-    return trade;
-  } catch (error) {
-    console.error('Database Error:', error);
-    throw new Error('Failed to fetch trade.');
-  }
-}
-
 export async function getTradeDetails(id: string) {
   noStore();
   try {
     const trade = await prisma.trade.findUnique({
       where: { id },
       include: {
-        teams: {
-          include: {
-            team: true
-          }
-        },
         draftPicks: true
       }
     });
     
     if (!trade) throw new Error('Trade not found');
     
-    return {
-      ...trade,
-      teams: trade.teams,
-      draft_picks: trade.draftPicks
-    } as TradeWithDetails;
+    return trade as TradeWithDetails;
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch trade details.');
@@ -106,26 +39,21 @@ export async function getTradeDetails(id: string) {
 export async function createTrade(
   userId: string,
   description: string,
-  teams: { teamId: string; isGiving: boolean }[],
-  draftPicks: { year: number; round: 1 | 2; givingTeamId: string; receivingTeamId: string }[]
+  teams: string[],
+  draftPicks: { year: number; round: number; givingTeam: string; receivingTeam: string }[]
 ) {
   try {
     const trade = await prisma.trade.create({
       data: {
         userId,
         description,
-        teams: {
-          create: teams.map(team => ({
-            teamId: team.teamId,
-            isGiving: team.isGiving
-          }))
-        },
+        teams,
         draftPicks: {
           create: draftPicks.map(pick => ({
             year: pick.year,
             round: pick.round,
-            givingTeamId: pick.givingTeamId,
-            receivingTeamId: pick.receivingTeamId
+            givingTeam: pick.givingTeam,
+            receivingTeam: pick.receivingTeam
           }))
         }
       }

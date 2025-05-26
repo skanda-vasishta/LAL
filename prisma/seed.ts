@@ -1,52 +1,89 @@
+// prisma/seed.ts
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  // Create teams
-  const teams = [
-    { name: 'Lakers', winPercentage: 0.488 },
-    { name: 'Celtics', winPercentage: 0.707 },
-    { name: 'Warriors', winPercentage: 0.463 },
-    { name: 'Bucks', winPercentage: 0.622 },
-    { name: 'Nuggets', winPercentage: 0.622 },
+  // Create a test user
+  const user = await prisma.user.create({
+    data: {
+      name: 'Test User',
+      email: 'test@example.com',
+      password: await bcrypt.hash('password123', 10),
+    },
+  });
+
+  // Create some sample trades
+  const trades = [
+    {
+      description: 'Lakers-Celtics Blockbuster',
+      teams: ['Los Angeles Lakers', 'Boston Celtics'],
+      draftPicks: [
+        {
+          year: 2024,
+          round: 1,
+          givingTeam: 'Los Angeles Lakers',
+          receivingTeam: 'Boston Celtics',
+        },
+        {
+          year: 2025,
+          round: 2,
+          givingTeam: 'Boston Celtics',
+          receivingTeam: 'Los Angeles Lakers',
+        },
+      ],
+    },
+    {
+      description: 'Warriors-Nuggets Trade',
+      teams: ['Golden State Warriors', 'Denver Nuggets'],
+      draftPicks: [
+        {
+          year: 2024,
+          round: 1,
+          givingTeam: 'Golden State Warriors',
+          receivingTeam: 'Denver Nuggets',
+        },
+      ],
+    },
+    {
+      description: 'Three-Team Trade',
+      teams: ['Miami Heat', 'Milwaukee Bucks', 'Phoenix Suns'],
+      draftPicks: [
+        {
+          year: 2024,
+          round: 1,
+          givingTeam: 'Miami Heat',
+          receivingTeam: 'Milwaukee Bucks',
+        },
+        {
+          year: 2025,
+          round: 1,
+          givingTeam: 'Milwaukee Bucks',
+          receivingTeam: 'Phoenix Suns',
+        },
+        {
+          year: 2026,
+          round: 2,
+          givingTeam: 'Phoenix Suns',
+          receivingTeam: 'Miami Heat',
+        },
+      ],
+    },
   ];
 
-  for (const team of teams) {
-    await prisma.team.create({
+  // Create the trades
+  for (const trade of trades) {
+    await prisma.trade.create({
       data: {
-        name: team.name,
-        winPercentage: team.winPercentage,
+        userId: user.id,
+        description: trade.description,
+        teams: trade.teams,
+        draftPicks: {
+          create: trade.draftPicks,
+        },
       },
     });
-  }
-
-  // Get all teams
-  const allTeams = await prisma.team.findMany();
-
-  // Create draft picks for each team
-  const currentYear = new Date().getFullYear();
-  for (const team of allTeams) {
-    // First round picks for next 3 years
-    for (let year = currentYear; year < currentYear + 3; year++) {
-      await prisma.draftPick.create({
-        data: {
-          year,
-          round: 1,
-          teamId: team.id,
-        },
-      });
-    }
-    // Second round picks for next 3 years
-    for (let year = currentYear; year < currentYear + 3; year++) {
-      await prisma.draftPick.create({
-        data: {
-          year,
-          round: 2,
-          teamId: team.id,
-        },
-      });
-    }
   }
 
   console.log('Seed data created successfully');
@@ -59,4 +96,4 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
-  }); 
+  });
