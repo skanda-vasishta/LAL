@@ -8,50 +8,51 @@ export type User = {
   name: string;
   email: string;
   password: string;
+  createdAt: Date;
 };
 
 export type Team = {
   id: string;
   name: string;
-  win_percentage: number; // Last season's win percentage
+  winPercentage: number; // Last season's win percentage
 };
 
 export type DraftPick = {
   id: string;
   year: number;
-  round: 1 | 2; // Only first or second round picks
-  team_id: string; // Current owner of the pick
+  round: number; // Round number (typically 1 or 2)
+  teamId: string; // Current owner of the pick
 };
 
 export type Trade = {
   id: string;
-  user_id: string;
+  userId: string;
   description: string;
-  created_at: Date;
+  createdAt: Date;
 };
 
 export type TradeTeam = {
   id: string;
-  trade_id: string;
-  team_id: string;
-  is_giving: boolean; // true if team is giving assets, false if receiving
+  tradeId: string;
+  teamId: string;
+  isGiving: boolean; // true if team is giving assets, false if receiving
 };
 
 export type TradeDraftPick = {
   id: string;
-  trade_id: string;
+  tradeId: string;
   year: number;
-  round: 1 | 2;
-  giving_team_id: string;
-  receiving_team_id: string;
+  round: number; // Round number (typically 1 or 2)
+  givingTeamId: string;
+  receivingTeamId: string;
 };
 
 // Combined types for API responses
 export type TradeWithDetails = Trade & {
   teams: (TradeTeam & { team: Team })[];
-  draft_picks: TradeDraftPick[];
+  draftPicks: TradeDraftPick[];
 };
 
 export type TeamWithAssets = Team & {
-  draft_picks: DraftPick[];
+  draftPicks: DraftPick[];
 };

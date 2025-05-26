@@ -27,7 +27,7 @@ export default async function DashboardPage() {
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">{team.name}</h2>
               <span className="text-gray-600">
-                Win %: {(team.win_percentage * 100).toFixed(1)}%
+                Win %: {(team.winPercentage * 100).toFixed(1)}%
               </span>
             </div>
             
