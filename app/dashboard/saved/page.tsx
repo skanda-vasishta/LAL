@@ -68,11 +68,20 @@
 // app/dashboard/saved/page.tsx
 import { prisma } from '@/app/lib/prisma';
 import { auth } from '@/auth';
-import type { Trade, TradeDraftPick } from '@prisma/client';
 
-// Define the type that matches what Prisma actually returns
-type TradeWithDraftPicks = Trade & {
-  draftPicks: TradeDraftPick[];
+// Define the exact type structure that matches what Prisma returns
+type TradeFromQuery = {
+  id: string;
+  description: string | null;
+  teams: string[];
+  createdAt: Date;
+  draftPicks: {
+    id: string;
+    year: number;
+    round: number;
+    givingTeam: string;
+    receivingTeam: string;
+  }[];
 };
 
 export default async function SavedTradesPage() {
@@ -108,12 +117,12 @@ export default async function SavedTradesPage() {
         <p className="text-gray-500">No trades saved yet.</p>
       ) : (
         <div className="space-y-4">
-          {user.trades.map((trade: TradeWithDraftPicks) => (
+          {user.trades.map((trade: TradeFromQuery) => (
             <div key={trade.id} className="bg-white p-4 rounded-lg shadow">
               <p className="font-medium mb-2">{trade.description || 'Untitled Trade'}</p>
               <div className="text-sm text-gray-600">
                 <p>Teams: {trade.teams.join(' ↔ ')}</p>
-                {trade.draftPicks.map((pick: TradeDraftPick) => (
+                {trade.draftPicks.map((pick) => (
                   <p key={pick.id}>
                     {pick.year} Round {pick.round}: {pick.givingTeam} → {pick.receivingTeam}
                   </p>
