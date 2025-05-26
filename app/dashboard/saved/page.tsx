@@ -65,6 +65,7 @@
 //     </div>
 //   );
 // }
+
 // app/dashboard/saved/page.tsx
 import { prisma } from '@/app/lib/prisma';
 import { auth } from '@/auth';
@@ -73,8 +74,8 @@ interface DraftPick {
   id: string;
   year: number;
   round: number;
-  givingTeam: string;
-  receivingTeam: string;
+  givingTeam: string;  // Changed to string
+  receivingTeam: string;  // Changed to string
 }
 
 interface Trade {
@@ -105,8 +106,8 @@ export default async function SavedTradesPage() {
               id: true,
               year: true,
               round: true,
-              givingTeam: true,
-              receivingTeam: true
+              givingTeam: true,  // Changed to just true
+              receivingTeam: true  // Changed to just true
             }
           },
           createdAt: true
