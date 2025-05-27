@@ -3,6 +3,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/app/ui/button';
+import Link from 'next/link';
 
 // NBA teams for the dropdown
 const NBA_TEAMS = [
@@ -46,6 +47,7 @@ interface TeamValue {
 }
 
 interface EvaluatedTrade {
+  id?: string;
   description: string;
   teams: string[];
   draftPicks: DraftPick[];
@@ -67,11 +69,56 @@ const getPickValue = (round: number, pickNumber: number) => {
   return PICK_VALUE_CHART[overallPick] || 0;
 };
 
-export default function TradeBuilder({ userId }: { userId: string }) {
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [description, setDescription] = useState('');
+export default function TradeBuilder({ userId, initialTrade }: { userId: string; initialTrade?: EvaluatedTrade }) {
+  const [teams, setTeams] = useState(() =>
+    initialTrade
+      ? initialTrade.teams.map(teamName => ({
+          id: Math.random().toString(),
+          name: teamName,
+          picks: initialTrade.draftPicks.filter(pick => pick.givingTeam === teamName)
+        }))
+      : []
+  );
+  const [description, setDescription] = useState(initialTrade?.description || '');
   const [errors, setErrors] = useState<ValidationError[]>([]);
-  const [evaluatedTrade, setEvaluatedTrade] = useState<EvaluatedTrade | null>(null);
+  const [evaluatedTrade, setEvaluatedTrade] = useState<EvaluatedTrade | null>(() => {
+    if (initialTrade) {
+      // Initialize teamValues if initialTrade exists
+      const teamValues: Record<string, TeamValue> = {};
+      initialTrade.teams.forEach(team => {
+        teamValues[team] = {
+          given: 0,
+          received: 0,
+          givenPicks: [],
+          receivedPicks: []
+        };
+      });
+
+      // Calculate initial values
+      initialTrade.draftPicks.forEach(pick => {
+        const value = getPickValue(pick.round, pick.pickNumber);
+        const pickLabel = `${pick.year} Round ${pick.round} Pick ${pick.pickNumber}`;
+        
+        if (!teamValues[pick.givingTeam]) {
+          teamValues[pick.givingTeam] = { given: 0, received: 0, givenPicks: [], receivedPicks: [] };
+        }
+        if (!teamValues[pick.receivingTeam]) {
+          teamValues[pick.receivingTeam] = { given: 0, received: 0, givenPicks: [], receivedPicks: [] };
+        }
+
+        teamValues[pick.givingTeam].given += value;
+        teamValues[pick.givingTeam].givenPicks.push(pickLabel);
+        teamValues[pick.receivingTeam].received += value;
+        teamValues[pick.receivingTeam].receivedPicks.push(pickLabel);
+      });
+
+      return {
+        ...initialTrade,
+        teamValues
+      };
+    }
+    return null;
+  });
 
   const addTeam = () => {
     setTeams([...teams, { id: Math.random().toString(), name: '', picks: [] }]);
@@ -79,9 +126,20 @@ export default function TradeBuilder({ userId }: { userId: string }) {
 
   const updateTeam = (id: string, name: string) => {
     setErrors([]);
-    setTeams(teams.map(team => 
-      team.id === id ? { ...team, name } : team
-    ));
+    setTeams(teams.map(team => {
+      if (team.id === id) {
+        // Update the team name and all its picks' givingTeam
+        return {
+          ...team,
+          name,
+          picks: team.picks.map(pick => ({
+            ...pick,
+            givingTeam: name // Update the givingTeam to match the new team name
+          }))
+        };
+      }
+      return team;
+    }));
   };
 
   const addPick = (teamId: string) => {
@@ -178,26 +236,26 @@ export default function TradeBuilder({ userId }: { userId: string }) {
   };
 
   const saveTrade = async () => {
-    // Clear previous errors before starting
     setErrors([]);
 
-    // Validate before saving
     if (!validateTrade()) {
       return;
     }
 
     try {
+      const method = initialTrade ? 'PUT' : 'POST';
+      const body = {
+        id: initialTrade?.id,
+        description,
+        teams: teams.map(team => team.name),
+        draftPicks: teams.flatMap(team => team.picks),
+        userId
+      };
+
       const response = await fetch('/api/trades', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          description,
-          teams: teams.map(team => team.name),
-          draftPicks: teams.flatMap(team => team.picks),
-          userId
-        }),
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
       });
 
       const data = await response.json();
@@ -207,26 +265,22 @@ export default function TradeBuilder({ userId }: { userId: string }) {
           field: 'general',
           message: data.error || 'Failed to save trade'
         }]);
-        // Clear errors after displaying for a moment (optional)
-        setTimeout(() => setErrors([]), 2000); // 2 seconds, adjust as needed
+        setTimeout(() => setErrors([]), 2000);
         return;
       }
 
-      // Reset form
+      // Reset form and redirect
       setTeams([]);
       setDescription('');
-      setErrors([]); // Clear errors after successful save
-
-      // Refresh the page to show new trade
-      window.location.reload();
+      setErrors([]);
+      window.location.href = '/dashboard/saved';
     } catch (error) {
       console.error('Error saving trade:', error);
       setErrors([{
         field: 'general',
         message: error instanceof Error ? error.message : 'Failed to save trade. Please try again.'
       }]);
-      // Clear errors after displaying for a moment (optional)
-      setTimeout(() => setErrors([]), 2000); // 2 seconds, adjust as needed
+      setTimeout(() => setErrors([]), 2000);
     }
   };
 

@@ -99,3 +99,62 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: 'Failed to delete trade' }, { status: 500 });
   }
 }
+
+export async function PUT(request: Request) {
+  try {
+    const session = await auth();
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email }
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    const { id, description, teams, draftPicks } = await request.json();
+
+    // Check if the trade belongs to the user
+    const existingTrade = await prisma.trade.findUnique({
+      where: { id },
+      select: { userId: true }
+    });
+
+    if (!existingTrade || existingTrade.userId !== user.id) {
+      return NextResponse.json({ error: 'Not allowed' }, { status: 403 });
+    }
+
+    // Update the trade
+    const updatedTrade = await prisma.trade.update({
+      where: { id },
+      data: {
+        description,
+        teams,
+        draftPicks: {
+          deleteMany: {}, // Delete all existing picks
+          create: draftPicks.map((pick: any) => ({
+            year: pick.year,
+            round: pick.round,
+            pickNumber: pick.pickNumber,
+            givingTeam: pick.givingTeam,
+            receivingTeam: pick.receivingTeam
+          }))
+        }
+      },
+      include: {
+        draftPicks: true
+      }
+    });
+
+    return NextResponse.json(updatedTrade);
+  } catch (error) {
+    console.error('Error updating trade:', error);
+    return NextResponse.json(
+      { error: 'Failed to update trade', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
+  }
+}
