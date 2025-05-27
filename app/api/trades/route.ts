@@ -28,7 +28,6 @@ export async function POST(request: Request) {
 
     const { description, teams, draftPicks } = await request.json();
 
-    // Just create the trade, no duplicate pick validation!
     const trade = await prisma.trade.create({
       data: {
         description,
@@ -50,10 +49,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json(trade);
   } catch (error) {
-    // Log the full error for debugging
+    // Log error 
     console.error('Detailed error creating trade:', error);
     
-    // Return a more specific error message
     return NextResponse.json(
       { 
         error: 'Failed to create trade',

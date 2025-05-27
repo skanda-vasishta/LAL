@@ -4,12 +4,10 @@ import { auth } from '@/auth';
 import TradeBuilder from './trade-builder';
 import { Suspense } from 'react';
 
-// Define the correct type for the page props
 type Props = {
   searchParams: Promise<{ edit?: string }>
 }
 
-// Import the getPickValue function and DraftPick type
 const PICK_VALUE_CHART: Record<number, number> = {
   1: 4000, 2: 3250, 3: 2890, 4: 2660, 5: 2500, 6: 2380, 7: 2280, 8: 2200, 9: 2120, 10: 2030,
   11: 1930, 12: 1840, 13: 1760, 14: 1690, 15: 1630, 16: 1580, 17: 1530, 18: 1490, 19: 1440, 20: 1400,
@@ -81,7 +79,7 @@ export default async function DashboardPage({
   }
 
   let initialTrade: EvaluatedTrade | undefined = undefined;
-  if (editId) {
+  if (editId) { //this code is redundant to trade-builder, only for edit functionality (passing in the trade id)
     const trade = await prisma.trade.findUnique({
       where: { id: editId },
       include: { draftPicks: true }

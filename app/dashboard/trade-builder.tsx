@@ -83,7 +83,8 @@ export default function TradeBuilder({ userId, initialTrade }: { userId: string;
   const [errors, setErrors] = useState<ValidationError[]>([]);
   const [evaluatedTrade, setEvaluatedTrade] = useState<EvaluatedTrade | null>(() => {
     if (initialTrade) {
-      // Initialize teamValues if initialTrade exists
+      // For new trades: It sets up the empty structure to track values as picks are added
+      // For existing trades: It sets up the structure that will be populated with the existing trade's data      
       const teamValues: Record<string, TeamValue> = {};
       initialTrade.teams.forEach(team => {
         teamValues[team] = {
@@ -160,7 +161,6 @@ export default function TradeBuilder({ userId, initialTrade }: { userId: string;
     }));
   };
 
-  // Modify the updatePick function to include validation
   const updatePick = (teamId: string, pickIndex: number, field: keyof DraftPick, value: string | number) => {
     setErrors([]);
     setTeams(teams.map(team => {

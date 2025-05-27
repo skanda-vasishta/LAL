@@ -2,11 +2,21 @@
 # You can find this deployed here: https://lal-one.vercel.app/
 A full-stack web application for building and evaluating NBA draft pick trades, built with Next.js and modern web technologies.
 
+## Application Usage Workflow
+1. You will be directed to a login/signup page, where you can create an account with your email and then log in.
+2. Once logged in, you will see the trade builder and saved trades tab, and you should already be on the trade builder tab.
+3. Select add team, then choose a team, the draft pick you want to trade away, and the recepient of that pick. Since teams need not give away picks all the time, the pick receipient is not automatically added to the trade, but you can easily add that team to send a pick back. 
+4. You can add only up to 4 "sending" teams in the trade, and each of those sending teams can send picks to any other team.
+5. Validation exists if fields are left empty, so you will be alerted if you leave something blank.
+6. Evaluate trade will evaluate the trade, and save trade will save the trade for your profile. 
+7. You can view all saved trades in the saved trades tab in the sidebar, where you can also edit and delete these trades.
+
+
 ## Tech Stack & Implementation Choices
 
 ### Next.js
-- Chosen as the primary framework for its simplicity and full-stack capabilities
-- Server-side rendering (SSR) for improved performance and SEO
+- Chosen as the primary full-stack framework for its simplicity, ability for front and backend development
+- Server-side rendering (SSR) for improved performance
 - Built-in API routes for backend functionality
 - File-based routing system for intuitive navigation
 - TypeScript support out of the box
@@ -27,11 +37,18 @@ A full-stack web application for building and evaluating NBA draft pick trades, 
 
 ### UI/UX
 - Tailwind CSS for responsive, utility-first styling
-- Heroicons for consistent iconography
-- Modern, clean interface with purple and gold accent colors
-- Responsive design for all device sizes
 
 ## Key Components
+
+### Dashboard ('app/dashboard/page.tsx)
+The main interface for creating and editing trades. Handles:
+- User authentication and session management
+- Loading existing trades for editing
+- Calculating draft pick values
+- Rendering the TradeBuilder component
+- Also has a sidebar where you can view saved trades and edit those past trades/
+
+The page dynamically switches between "Create New Trade" and "Edit Trade" modes based on URL parameters.
 
 ### Trade Builder (`app/dashboard/trade-builder.tsx`)
 - Core component for creating and editing trades
@@ -112,20 +129,12 @@ model TradeDraftPick {
 - Secure password handling
 - Type-safe database operations
 
-## Security Considerations
-
-- Passwords are hashed using bcrypt
-- Protected API routes
-- Input validation on all forms
-- Type safety with TypeScript
-- Secure session management
-- Environment variable protection
-
 ## Future Improvements
 
 - Add varying value based on future draft picks
 - Pick protection support
 - Team win percentage (forecast team's performance) for future draft positions
+- Trade recommender system
 - Add player trading capabilities
 - Implement trade history and analytics
 - Add team salary cap integration
