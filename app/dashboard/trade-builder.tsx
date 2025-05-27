@@ -22,6 +22,7 @@ const DRAFT_YEARS = Array.from({ length: 8 }, (_, i) => new Date().getFullYear()
 interface DraftPick {
   year: number;
   round: number;
+  pickNumber: number;
   givingTeam: string;
   receivingTeam: string;
 }
@@ -47,6 +48,7 @@ export default function TradeBuilder({ userId }: { userId: string }) {
   };
 
   const updateTeam = (id: string, name: string) => {
+    setErrors([]);
     setTeams(teams.map(team => 
       team.id === id ? { ...team, name } : team
     ));
@@ -60,6 +62,7 @@ export default function TradeBuilder({ userId }: { userId: string }) {
           picks: [...team.picks, {
             year: new Date().getFullYear(),
             round: 1,
+            pickNumber: 1,
             givingTeam: team.name,
             receivingTeam: ''
           }]
@@ -69,18 +72,22 @@ export default function TradeBuilder({ userId }: { userId: string }) {
     }));
   };
 
+  // Modify the updatePick function to include validation
   const updatePick = (teamId: string, pickIndex: number, field: keyof DraftPick, value: string | number) => {
+    setErrors([]);
     setTeams(teams.map(team => {
       if (team.id === teamId) {
         const newPicks = [...team.picks];
-        newPicks[pickIndex] = { ...newPicks[pickIndex], [field]: value };
+        const updatedPick = { ...newPicks[pickIndex], [field]: value };
+        
+        newPicks[pickIndex] = updatedPick;
         return { ...team, picks: newPicks };
       }
       return team;
     }));
   };
 
-  // Validation function
+  // Modify the validateTrade function to include pick uniqueness check
   const validateTrade = (): boolean => {
     const newErrors: ValidationError[] = [];
 
@@ -141,7 +148,7 @@ export default function TradeBuilder({ userId }: { userId: string }) {
   };
 
   const saveTrade = async () => {
-    // Clear previous errors
+    // Clear previous errors before starting
     setErrors([]);
 
     // Validate before saving
@@ -163,23 +170,33 @@ export default function TradeBuilder({ userId }: { userId: string }) {
         }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error('Failed to save trade');
+        setErrors([{
+          field: 'general',
+          message: data.error || 'Failed to save trade'
+        }]);
+        // Clear errors after displaying for a moment (optional)
+        setTimeout(() => setErrors([]), 2000); // 2 seconds, adjust as needed
+        return;
       }
 
       // Reset form
       setTeams([]);
       setDescription('');
-      setErrors([]);
-      
+      setErrors([]); // Clear errors after successful save
+
       // Refresh the page to show new trade
       window.location.reload();
     } catch (error) {
       console.error('Error saving trade:', error);
       setErrors([{
         field: 'general',
-        message: 'Failed to save trade. Please try again.'
+        message: error instanceof Error ? error.message : 'Failed to save trade. Please try again.'
       }]);
+      // Clear errors after displaying for a moment (optional)
+      setTimeout(() => setErrors([]), 2000); // 2 seconds, adjust as needed
     }
   };
 
@@ -262,6 +279,16 @@ export default function TradeBuilder({ userId }: { userId: string }) {
                 >
                   <option value={1}>1st Round</option>
                   <option value={2}>2nd Round</option>
+                </select>
+
+                <select
+                  value={pick.pickNumber}
+                  onChange={(e) => updatePick(team.id, pickIndex, 'pickNumber', parseInt(e.target.value))}
+                  className="p-2 border rounded-md"
+                >
+                  {Array.from({ length: 30 }, (_, i) => (
+                    <option key={i + 1} value={i + 1}>Pick {i + 1}</option>
+                  ))}
                 </select>
 
                 <select

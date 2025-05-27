@@ -23,12 +23,14 @@ async function main() {
         {
           year: 2024,
           round: 1,
+          pickNumber: 1,
           givingTeam: 'Los Angeles Lakers',
           receivingTeam: 'Boston Celtics',
         },
         {
           year: 2025,
           round: 2,
+          pickNumber: 15,
           givingTeam: 'Boston Celtics',
           receivingTeam: 'Los Angeles Lakers',
         },
@@ -41,6 +43,7 @@ async function main() {
         {
           year: 2024,
           round: 1,
+          pickNumber: 7,
           givingTeam: 'Golden State Warriors',
           receivingTeam: 'Denver Nuggets',
         },
@@ -53,18 +56,21 @@ async function main() {
         {
           year: 2024,
           round: 1,
+          pickNumber: 3,
           givingTeam: 'Miami Heat',
           receivingTeam: 'Milwaukee Bucks',
         },
         {
           year: 2025,
           round: 1,
+          pickNumber: 12,
           givingTeam: 'Milwaukee Bucks',
           receivingTeam: 'Phoenix Suns',
         },
         {
           year: 2026,
           round: 2,
+          pickNumber: 25,
           givingTeam: 'Phoenix Suns',
           receivingTeam: 'Miami Heat',
         },

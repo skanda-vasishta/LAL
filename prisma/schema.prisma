@@ -42,6 +42,7 @@ model TradeDraftPick {
   tradeId         String   @map("trade_id")
   year            Int
   round           Int
+  pickNumber      Int
   givingTeam      String   
   receivingTeam   String   
 
