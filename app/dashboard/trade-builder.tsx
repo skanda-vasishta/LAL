@@ -175,17 +175,40 @@ export default function TradeBuilder({ userId, initialTrade }: { userId: string;
     }));
   };
 
+  // Add this new function to check for duplicate picks
+  const hasDuplicatePicks = (): { hasDuplicates: boolean; duplicates: string[] } => {
+    const allPicks = teams.flatMap(team => team.picks);
+    const pickMap = new Map<string, number>();
+    const duplicates: string[] = [];
+
+    allPicks.forEach(pick => {
+      const pickKey = `${pick.year}-${pick.round}-${pick.pickNumber}`;
+      if (pickMap.has(pickKey)) {
+        duplicates.push(pickKey);
+      }
+      pickMap.set(pickKey, (pickMap.get(pickKey) || 0) + 1);
+    });
+
+    return {
+      hasDuplicates: duplicates.length > 0,
+      duplicates: duplicates.map(key => {
+        const [year, round, number] = key.split('-');
+        return `${year} Round ${round} Pick ${number}`;
+      })
+    };
+  };
+
   // Modify the validateTrade function to include pick uniqueness check
   const validateTrade = (): boolean => {
     const newErrors: ValidationError[] = [];
 
     // Check description
-    // if (!description.trim()) {
-    //   newErrors.push({
-    //     field: 'description',
-    //     message: 'Trade description is required'
-    //   });
-    // }
+    if (!description.trim()) {
+      newErrors.push({
+        field: 'description',
+        message: 'Trade description is required'
+      });
+    }
 
     // Check teams
     if (teams.length === 0) {
@@ -230,6 +253,15 @@ export default function TradeBuilder({ userId, initialTrade }: { userId: string;
         }
       });
     });
+
+    // Check for duplicate picks
+    const { hasDuplicates, duplicates } = hasDuplicatePicks();
+    if (hasDuplicates) {
+      newErrors.push({
+        field: 'duplicate-picks',
+        message: `Duplicate draft picks found: ${duplicates.join(', ')}`
+      });
+    }
 
     setErrors(newErrors);
     return newErrors.length === 0;
@@ -341,6 +373,12 @@ export default function TradeBuilder({ userId, initialTrade }: { userId: string;
       {getError('general') && (
         <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md">
           {getError('general')}
+        </div>
+      )}
+
+      {getError('duplicate-picks') && (
+        <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md">
+          {getError('duplicate-picks')}
         </div>
       )}
 
