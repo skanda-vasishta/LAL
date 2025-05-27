@@ -114,11 +114,18 @@ export default async function SavedTradesPage() {
               <div className="text-sm text-gray-600">
                 {/* <p>Teams: {trade.teams.join(' ↔ ')}</p> */}
                 <p>Teams: {(trade as any).teams.join(' ↔ ')}</p>
-                {trade.draftPicks.map((pick: TradeDraftPick) => (
+                {/* {trade.draftPicks.map((pick: TradeDraftPick) => (
                   <p key={pick.id}>
                     {pick.year} Round {pick.round}: {pick.givingTeam} → {pick.receivingTeam}
                   </p>
-                ))}
+                ))} */}
+                {trade.draftPicks.map(pick => (
+  <p key={pick.id}>
+    {pick.year} Round {pick.round}: 
+    {pick.givingTeamId} → {pick.receivingTeamId}
+  </p>
+))}
+
               </div>
             </div>
           ))}
