@@ -96,7 +96,7 @@ export default function LoginForm() {
         </div>
         <div className="mt-4 text-center text-sm">
           Don't have an account?{' '}
-          <Link href="/signup" className="text-blue-500 hover:text-blue-700">
+          <Link href="/signup" className="text-purple-700 hover:text-purple-800 font-medium border-b border-purple-200 hover:border-purple-400">
             Sign up
           </Link>
         </div>
