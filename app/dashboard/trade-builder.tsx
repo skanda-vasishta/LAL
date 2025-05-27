@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { Button } from '@/app/ui/button';
 import Link from 'next/link';
+import TradeChat from '@/app/ui/TradeChat';
 
 // NBA teams for the dropdown
 const NBA_TEAMS = [
@@ -533,34 +534,38 @@ export default function TradeBuilder({ userId, initialTrade }: { userId: string;
 
       {/* Show evaluated trade details */}
       {evaluatedTrade && (
-        <div className="mt-8 p-4 border rounded bg-gray-50">
-          <h3 className="font-bold mb-2">Team Value Summary</h3>
-          <ul>
-            {Object.entries(evaluatedTrade.teamValues).map(([team, { given, received, givenPicks, receivedPicks }]) => {
-              const net = received - given;
-              return (
-                <li key={team} className="mb-4">
-                  <div>
-                    <strong>{team}:</strong> Gave up {given}, Received {received}, Net: {net} —{" "}
-                    <span className={net >= 0 ? "text-green-600" : "text-red-600"}>
-                      {net >= 0 ? "Good trade" : "Bad trade"}
-                    </span>
-                  </div>
-                  {givenPicks.length > 0 && (
-                    <div className="ml-4 text-sm text-gray-700">
-                      Picks given up: {givenPicks.join(", ")}
+<>
+          <div className="mt-8 p-4 border rounded bg-gray-50">
+            <h3 className="font-bold mb-2">Team Value Summary</h3>
+            <ul>
+              {Object.entries(evaluatedTrade.teamValues).map(([team, { given, received, givenPicks, receivedPicks }]) => {
+                const net = received - given;
+                return (
+                  <li key={team} className="mb-4">
+                    <div>
+                      <strong>{team}:</strong> Gave up {given}, Received {received}, Net: {net} —{" "}
+                      <span className={net >= 0 ? "text-green-600" : "text-red-600"}>
+                        {net >= 0 ? "Good trade" : "Bad trade"}
+                      </span>
                     </div>
-                  )}
-                  {receivedPicks.length > 0 && (
-                    <div className="ml-4 text-sm text-blue-700">
-                      Picks received: {receivedPicks.join(", ")}
-                    </div>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
+                    {givenPicks.length > 0 && (
+                      <div className="ml-4 text-sm text-gray-700">
+                        Picks given up: {givenPicks.join(", ")}
+                      </div>
+                    )}
+                    {receivedPicks.length > 0 && (
+                      <div className="ml-4 text-sm text-blue-700">
+                        Picks received: {receivedPicks.join(", ")}
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+          
+          <TradeChat tradeData={evaluatedTrade} />
+        </>
       )}
     </div>
   );
