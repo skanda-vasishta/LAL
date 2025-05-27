@@ -1,6 +1,6 @@
 # NBA Trade Tool
 # You can find this deployed here: https://lal-one.vercel.app/
-A full-stack web application for building and evaluating NBA draft pick trades, built with Next.js and modern web technologies.
+A full-stack web application for building and evaluating NBA draft pick trades, built with Next.js, Prisma ORM + Neon PostgreSQL, and OpenAI API.
 
 ## Application Usage Workflow
 1. You will be directed to a login/signup page, where you can create an account with your email and then log in.
@@ -8,7 +8,7 @@ A full-stack web application for building and evaluating NBA draft pick trades, 
 3. Select add team, then choose a team, the draft pick you want to trade away, and the recepient of that pick. Since teams need not give away picks all the time, the pick receipient is not automatically added to the trade, but you can easily add that team to send a pick back. 
 4. You can add only up to 4 "sending" teams in the trade, and each of those sending teams can send picks to any other team.
 5. Validation exists if fields are left empty, so you will be alerted if you leave something blank.
-6. Evaluate trade will evaluate the trade, and save trade will save the trade for your profile. 
+6. Evaluate trade will evaluate the trade, and save trade will save the trade for your profile. You can also try using the AI trade analysis assistant, which has information about the current trade. Ask questions like "Who won this trade?" or "Who lost this trade?", or "Who are some prospects in 2025 that can be drafted with the first pick?"
 7. You can view all saved trades in the saved trades tab in the sidebar, where you can also edit and delete these trades.
 
 
@@ -38,6 +38,9 @@ A full-stack web application for building and evaluating NBA draft pick trades, 
 ### UI/UX
 - Tailwind CSS for responsive, utility-first styling
 
+### AI
+- OpenAI API (GPT-3.5 Model) used for Chatbot functionality
+
 ## Key Components
 
 ### Dashboard ('app/dashboard/page.tsx)
@@ -46,7 +49,7 @@ The main interface for creating and editing trades. Handles:
 - Loading existing trades for editing
 - Calculating draft pick values
 - Rendering the TradeBuilder component
-- Also has a sidebar where you can view saved trades and edit those past trades/
+- Also has a sidebar where you can view saved trades and edit those past trades.
 
 The page dynamically switches between "Create New Trade" and "Edit Trade" modes based on URL parameters.
 
@@ -62,7 +65,7 @@ The page dynamically switches between "Create New Trade" and "Edit Trade" modes 
 ### API Routes
 - `/api/trades` - CRUD operations for trades
 - `/api/users` - User management and authentication
-- All routes protected with authentication middleware
+- `/api/trade-chat` - OpenAI API POST method
 
 ### Database Models
 ```prisma
@@ -108,6 +111,7 @@ model TradeDraftPick {
    ```env
    POSTGRES_URL=your_neon_db_url
    NEXTAUTH_SECRET=your_secret
+   OPENAI_API_KEY-your_secret
    ```
 4. Run database migrations:
    ```bash
@@ -128,6 +132,9 @@ model TradeDraftPick {
 - Responsive design for all devices
 - Secure password handling
 - Type-safe database operations
+- AI-powered trade analysis chatbot (mockup)
+  - Currently uses sample data for demonstration
+  - Provides instant trade analysis and insights
 
 ## Future Improvements
 
@@ -139,4 +146,12 @@ model TradeDraftPick {
 - Implement trade history and analytics
 - Add team salary cap integration
 - Enhanced trade evaluation metrics
+- AI Chatbot Enhancements:
+  - Current limitation: must save trade and come back to trade builder to update model's context about any changes made to the trade. 
+  - Integration with real NBA statistics and historical trade data
+  - Machine learning model trained on successful/failed trades
+  - External API integrations for real-time player stats and team performance
+  - Natural language processing improvements for better trade analysis
+  - Support for complex trade scenarios and multi-team analysis
+  - Integration with salary cap data for comprehensive trade evaluation
 
