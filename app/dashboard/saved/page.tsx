@@ -122,7 +122,7 @@ export default async function SavedTradesPage() {
                 {trade.draftPicks.map(pick => (
   <p key={pick.id}>
     {pick.year} Round {pick.round}: 
-    {pick.givingTeamId} → {pick.receivingTeamId}
+    {pick.givingTeam} → {pick.receivingTeam}
   </p>
 ))}
 
