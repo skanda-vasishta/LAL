@@ -38,10 +38,25 @@ interface ValidationError {
   message: string;
 }
 
+const PICK_VALUE_CHART: Record<number, number> = {
+  1: 4000, 2: 3250, 3: 2890, 4: 2660, 5: 2500, 6: 2380, 7: 2280, 8: 2200, 9: 2120, 10: 2030,
+  11: 1930, 12: 1840, 13: 1760, 14: 1690, 15: 1630, 16: 1580, 17: 1530, 18: 1490, 19: 1440, 20: 1400,
+  21: 1340, 22: 1300, 23: 1250, 24: 1210, 25: 1170, 26: 1130, 27: 1090, 28: 1040, 29: 1000, 30: 950,
+  31: 720, 32: 690, 33: 660, 34: 630, 35: 600, 36: 580, 37: 550, 38: 530, 39: 500, 40: 480,
+  41: 460, 42: 430, 43: 410, 44: 390, 45: 370, 46: 350, 47: 330, 48: 310, 49: 290, 50: 270,
+  51: 250, 52: 240, 53: 220, 54: 200, 55: 180, 56: 170, 57: 150, 58: 130, 59: 120, 60: 100,
+};
+
+const getPickValue = (round: number, pickNumber: number) => {
+  const overallPick = round === 1 ? pickNumber : pickNumber + 30;
+  return PICK_VALUE_CHART[overallPick] || 0;
+};
+
 export default function TradeBuilder({ userId }: { userId: string }) {
   const [teams, setTeams] = useState<Team[]>([]);
   const [description, setDescription] = useState('');
   const [errors, setErrors] = useState<ValidationError[]>([]);
+  const [evaluatedTrade, setEvaluatedTrade] = useState<any>(null);
 
   const addTeam = () => {
     setTeams([...teams, { id: Math.random().toString(), name: '', picks: [] }]);
@@ -200,6 +215,52 @@ export default function TradeBuilder({ userId }: { userId: string }) {
     }
   };
 
+  // New function for evaluating the trade
+  const evaluateTrade = () => {
+    setErrors([]); // Clear previous errors
+
+    if (!validateTrade()) {
+      setEvaluatedTrade(null);
+      return;
+    }
+
+    // Collect all unique teams from givingTeam and receivingTeam
+    const allTeams = new Set<string>();
+    teams.forEach(team => allTeams.add(team.name));
+    teams.forEach(team => {
+      team.picks.forEach(pick => {
+        allTeams.add(pick.givingTeam);
+        allTeams.add(pick.receivingTeam);
+      });
+    });
+
+    // Initialize value summary for all teams
+    const teamValues: Record<string, { given: number; received: number; givenPicks: string[]; receivedPicks: string[] }> = {};
+    allTeams.forEach(team => {
+      teamValues[team] = { given: 0, received: 0, givenPicks: [], receivedPicks: [] };
+    });
+
+    // Calculate values and track given/received picks
+    teams.forEach(team => {
+      team.picks.forEach(pick => {
+        const value = getPickValue(pick.round, pick.pickNumber);
+        const pickLabel = `${pick.year} Round ${pick.round} Pick ${pick.pickNumber}`;
+        teamValues[pick.givingTeam].given += value;
+        teamValues[pick.givingTeam].givenPicks.push(pickLabel);
+        teamValues[pick.receivingTeam].received += value;
+        teamValues[pick.receivingTeam].receivedPicks.push(pickLabel);
+      });
+    });
+
+    setEvaluatedTrade({
+      description,
+      teams: Array.from(allTeams),
+      draftPicks: teams.flatMap(team => team.picks),
+      teamValues,
+      userId
+    });
+  };
+
   // Helper function to get error message for a field
   const getError = (field: string) => {
     return errors.find(error => error.field === field)?.message;
@@ -234,10 +295,21 @@ export default function TradeBuilder({ userId }: { userId: string }) {
 
       {teams.map((team, index) => (
         <div key={team.id} className="mb-6 p-4 border rounded-md">
-          <div className="mb-4">
+          <div className="mb-4 flex items-center justify-between">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Team {index + 1}
             </label>
+            {teams.length > 1 && (
+              <button
+                onClick={() => setTeams(teams.filter((_, i) => i !== index))}
+                className="text-red-500 hover:text-red-700"
+                type="button"
+              >
+                Remove Team
+              </button>
+            )}
+          </div>
+          <div className="mb-4">
             <select
               value={team.name}
               onChange={(e) => updateTeam(team.id, e.target.value)}
@@ -341,18 +413,48 @@ export default function TradeBuilder({ userId }: { userId: string }) {
       )}
 
       <div className="flex gap-4">
-        <Button onClick={addTeam}>
+        <Button onClick={addTeam} disabled={teams.length >= 4}>
           + Add Team
         </Button>
-        <Button 
-          onClick={saveTrade}
-        //   disabled={teams.length === 0 || !description}
-        disabled={teams.length === 0 }
-
-        >
+        <Button onClick={saveTrade} disabled={teams.length === 0}>
           Save Trade
         </Button>
+        <Button onClick={evaluateTrade} disabled={teams.length === 0}>
+          Evaluate Trade
+        </Button>
       </div>
+
+      {/* Show evaluated trade details */}
+      {evaluatedTrade && (
+        <div className="mt-8 p-4 border rounded bg-gray-50">
+          <h3 className="font-bold mb-2">Team Value Summary</h3>
+          <ul>
+            {Object.entries(evaluatedTrade.teamValues).map(([team, { given, received, givenPicks, receivedPicks }]) => {
+              const net = received - given;
+              return (
+                <li key={team} className="mb-4">
+                  <div>
+                    <strong>{team}:</strong> Gave up {given}, Received {received}, Net: {net} —{" "}
+                    <span className={net >= 0 ? "text-green-600" : "text-red-600"}>
+                      {net >= 0 ? "Good trade" : "Bad trade"}
+                    </span>
+                  </div>
+                  {givenPicks.length > 0 && (
+                    <div className="ml-4 text-sm text-gray-700">
+                      Picks given up: {givenPicks.join(", ")}
+                    </div>
+                  )}
+                  {receivedPicks.length > 0 && (
+                    <div className="ml-4 text-sm text-blue-700">
+                      Picks received: {receivedPicks.join(", ")}
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
