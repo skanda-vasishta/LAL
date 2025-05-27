@@ -4,6 +4,9 @@
 import { useState } from 'react';
 import { Button } from '@/app/ui/button';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import TradeAnalysis from '../components/TradeAnalysis';
 
 // NBA teams for the dropdown
 const NBA_TEAMS = [
@@ -67,6 +70,30 @@ const PICK_VALUE_CHART: Record<number, number> = {
 const getPickValue = (round: number, pickNumber: number) => {
   const overallPick = round === 1 ? pickNumber : pickNumber + 30;
   return PICK_VALUE_CHART[overallPick] || 0;
+};
+
+// Hardcoded prospects by year
+const PROSPECTS_BY_YEAR = {
+  2025: [
+    'AJ Dybantsa', 'Cameron Boozer', 'Darryn Peterson', 'Caleb Wilson', 
+    'Koa Peat', 'Nate Ament', 'Isiah Harwell', 'Mikel Brown Jr.', 
+    'Chris Cenac', 'Tounde Yessoufou'
+  ],
+  2026: [
+    'Tyran Stokes', 'Brandon McCoy Jr.', 'Christian Collins', 'Jordan Smith Jr.', 
+    'Caleb Holt', 'Jason Crowe Jr.', 'Miikka Muurinen', 'Tajh Ariza', 
+    'Alijah Arenas', 'Abdou Toure'
+  ],
+  2027: [
+    'Baba Oladotun', 'C.J. Rosser', 'Ryan Hampton', 'Jaylan Mitchell', 
+    'Paul Osaruyi', 'Lincoln Cosby', 'Tyrone Jamison', 'Josh Leonard', 
+    'Marcus Spears Jr.', 'Taiwo Daramola'
+  ],
+  2028: [
+    'Kam Mercer', 'Quinton Wilson', 'Adan Diggs', 'AJ Williams', 
+    'Peter Julius', 'Kevin Wheatley Jr.', 'Josh Lindsay', 'Miles Simpson', 
+    'Jaleel Smith', 'Antoine Moreman'
+  ]
 };
 
 export default function TradeBuilder({ userId, initialTrade }: { userId: string; initialTrade?: EvaluatedTrade }) {
@@ -368,7 +395,7 @@ export default function TradeBuilder({ userId, initialTrade }: { userId: string;
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
+    <div className="space-y-6">
       {/* General error message */}
       {getError('general') && (
         <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md">
@@ -560,6 +587,23 @@ export default function TradeBuilder({ userId, initialTrade }: { userId: string;
               );
             })}
           </ul>
+
+          <div className="mt-8">
+            <Button
+              onClick={() => {
+                const tradeAnalysis = document.getElementById('trade-analysis');
+                if (tradeAnalysis) {
+                  tradeAnalysis.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+            >
+              Analyze with AI
+            </Button>
+          </div>
+
+          <div id="trade-analysis">
+            <TradeAnalysis evaluatedTrade={evaluatedTrade} />
+          </div>
         </div>
       )}
     </div>
