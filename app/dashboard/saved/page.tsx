@@ -69,6 +69,7 @@
 import { prisma } from '@/app/lib/prisma';
 import { auth } from '@/auth';
 import type { Trade, TradeDraftPick } from '@prisma/client';
+import DeleteTradeButton from './DeleteTradeButton';
 
 // Define the type for trade with included draft picks
 type TradeWithDraftPicks = Trade & {
@@ -110,10 +111,13 @@ export default async function SavedTradesPage() {
         <div className="space-y-4">
           {user.trades.map((trade: TradeWithDraftPicks) => (
             <div key={trade.id} className="bg-white p-4 rounded-lg shadow">
-              <p className="font-medium mb-2">{trade.description || 'Untitled Trade'}</p>
+              <div className="flex justify-between items-start">
+                <p className="font-medium mb-2">{trade.description || 'Untitled Trade'}</p>
+                <DeleteTradeButton tradeId={trade.id} />
+              </div>
               <div className="text-sm text-gray-600">
                 <p>Teams: {(trade as any).teams.join(' ↔ ')}</p>
-                {trade.draftPicks.map(pick => (
+                {trade.draftPicks.map((pick: TradeDraftPick) => (
                   <p key={pick.id}>
                     {pick.year} Round {pick.round} Pick {pick.pickNumber}: {pick.givingTeam} → {pick.receivingTeam}
                   </p>

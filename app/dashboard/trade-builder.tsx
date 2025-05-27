@@ -38,6 +38,21 @@ interface ValidationError {
   message: string;
 }
 
+interface TeamValue {
+  given: number;
+  received: number;
+  givenPicks: string[];
+  receivedPicks: string[];
+}
+
+interface EvaluatedTrade {
+  description: string;
+  teams: string[];
+  draftPicks: DraftPick[];
+  teamValues: Record<string, TeamValue>;
+  userId: string;
+}
+
 const PICK_VALUE_CHART: Record<number, number> = {
   1: 4000, 2: 3250, 3: 2890, 4: 2660, 5: 2500, 6: 2380, 7: 2280, 8: 2200, 9: 2120, 10: 2030,
   11: 1930, 12: 1840, 13: 1760, 14: 1690, 15: 1630, 16: 1580, 17: 1530, 18: 1490, 19: 1440, 20: 1400,
@@ -56,7 +71,7 @@ export default function TradeBuilder({ userId }: { userId: string }) {
   const [teams, setTeams] = useState<Team[]>([]);
   const [description, setDescription] = useState('');
   const [errors, setErrors] = useState<ValidationError[]>([]);
-  const [evaluatedTrade, setEvaluatedTrade] = useState<any>(null);
+  const [evaluatedTrade, setEvaluatedTrade] = useState<EvaluatedTrade | null>(null);
 
   const addTeam = () => {
     setTeams([...teams, { id: Math.random().toString(), name: '', picks: [] }]);
@@ -235,7 +250,7 @@ export default function TradeBuilder({ userId }: { userId: string }) {
     });
 
     // Initialize value summary for all teams
-    const teamValues: Record<string, { given: number; received: number; givenPicks: string[]; receivedPicks: string[] }> = {};
+    const teamValues: Record<string, TeamValue> = {};
     allTeams.forEach(team => {
       teamValues[team] = { given: 0, received: 0, givenPicks: [], receivedPicks: [] };
     });

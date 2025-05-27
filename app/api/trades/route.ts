@@ -63,3 +63,39 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export async function DELETE(request: Request) {
+  try {
+    const session = await auth();
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Get the user from the database
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email }
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    const { tradeId } = await request.json();
+
+    // Check if the trade belongs to the user
+    const trade = await prisma.trade.findUnique({
+      where: { id: tradeId },
+      select: { userId: true }
+    });
+    if (!trade || trade.userId !== user.id) {
+      return NextResponse.json({ error: 'Not allowed' }, { status: 403 });
+    }
+
+    await prisma.trade.delete({ where: { id: tradeId } });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting trade:', error);
+    return NextResponse.json({ error: 'Failed to delete trade' }, { status: 500 });
+  }
+}
